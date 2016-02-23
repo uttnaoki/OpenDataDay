@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<body>
+  <form name="form1" id="id_form1" action="">
+    <input name="textBox1" id="id_textBox1" type="text" value="" />
+    <input type="button" id="id_button" value="Exec" />
+  </form>
+  <hr/>
+  <hr/>
+  <div id="output"></div>
+  <img id="image">
+  <script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+  <script language="javascript">
+    $(function() {
+      var source;
+      var len;
+      $.ajax({
+        url: 'マステ発祥.txt',
+        success: function(data) {
+          var data_array = data.split(/\r\n|\r|\n/); // 改行コードで分割
+
+          len = data_array.length;
+          for (var i = 0; i < len; i++) {
+            i = i + extract(data_array, i, len, 'らしい') - 1;
+          }
+          source = data_array;
+        }
+      });
+    });
+    /*
+    $("#id_button2").click(function() {
+      //read();
+    });*/
+
+/*
+    $("#id_button").click(function() {
+      $("#output").html("");
+      for (var i = 0; i < len; i++) {
+        i = i + extract(source, i, len, $("#id_form1").val());
+      }
+      console.log($("#id_form1").text())
+    });
+*/
+    function extract(data, j, end, key) {
+      var str = [];
+      var i = 1;
+      var flag1 = 0;
+      var len;
+      target = document.getElementById("output");
+      str[0] = data[j];
+      if (data[j].indexOf(key) != -1) flag1 = 1;
+      for (i = 1; i + j < end && data[i + j].charAt(0) != '['; i++) {
+        str[i] = data[i + j];
+        if (data[i + j].indexOf(key) != -1) flag1 = 1;
+      }
+      len = str.length;
+      if (flag1 == 1) {
+        for (i = 0; i < len; i++) {
+          console.log(str[i]);
+          //document.write(str[i] + '<br>');
+          $("#output").html($("#output").html() + str[i] + '<br>');
+        }
+        $("#output").html($("#output").html() + '<br>');
+      }
+      return len;
+    }
+  </script>
+</body>
+
+</html>
