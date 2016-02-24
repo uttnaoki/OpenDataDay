@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<body>
+  <form name="form1" id="id_form1" action="">
+    <input name="textBox1" id="id_textBox1" type="text" value="" /> 検索語句
+    <br/>
+    <input name="textBox2" id="id_textBox2" type="text" value="" /> ファイル
+    <br/>
+    <input type="button" id="id_button2" value="検索" />
+    <input type="radio" name="and_or" id="id_and" value ="and" checked="1" />and
+    <input type="radio" name="and_or" id="id_or" value ="or"/>or
+  </form>
+  <p id="count"></p>
+  <hr/>
+  <div id="output"></div>
+  <img id="image">
+  <style type="text/css">
+    .highlight {
+      background-color: yellow;
+    }
+  </style>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script type="text/javascript" src="http://johannburkard.de/resources/Johann/jquery.highlight-5.js"></script>
+  <script language="javascript">
+    $(function() {
+      var source;
+      var len;
+      var count;
+
+      function read(file) {
+        count = 0;
+        $.ajax({
+          url: file,
+          success: function(data) {
+            var data_array = data.split(/\r\n|\r|\n/); // 改行コードで分割
+            var keyword = $("#id_textBox1").val().split(',');
+            len = data_array.length;
+            count = extract(data_array, len, keyword);
+            $("#count").html(count + '件ヒット');
+            for (var i = 0; i < keyword.length; i++) {
+              $("#output").highlight(keyword[i]);
+            }
+            source = data_array;
+          }
+        });
+      }
+      $("#id_button2").click(function() {
+        $("#output").html("");
+        if ($("#id_textBox2").val() === "")
+          $("#id_textBox2").val("マステ発祥.txt");
+        read($("#id_textBox2").val());
+      })
+      $("#id_form1").keypress(function(e) {
+        if (e.which === 13) {
+          return false;
+        }
+      })
+    });
+
+    function extract(data, len, key) {
+      var str = [];
+      var i = 0;
+      var flag = [];
+      var count = 0;
+      var keylen = key.length;
+      while (i < len) {
+        for (var j = 0; j < keylen; j++) flag[j] = 0; // flagの初期化
+        var f = (function(j) { // 次のツイートの行数抽出
+          for (var i = 0; i + j < len && data[i + j].charAt(0) != '['; i++);
+          return i + j - 1;
+        }(i + 1));
+        for (var s = i; s <= f; s++) { // 検索語句に引っかかっているか
+          for (var j = 0; j < keylen; j++) {
+            if (data[s].indexOf(key[j]) != -1) flag[j] = 1;
+          }
+        }
+        var outputflag = (function() {
+          var value=$("input[name='and_or']:checked").val();
+          if (value==="and") { // andで検索
+            for (var j = 0; j < keylen; j++) {
+              if (flag[j] === 0) return 0; // flagが一つでも0だったら
+            }
+            return 1; // flagすべてが1だったら
+          } else { //orで検索
+            for (var j = 0; j < keylen; j++) {
+              if (flag[j] === 1) return 1; // flagが一つでも1だったら
+            }
+            return 0; // flagがすべて0だったら
+          }
+        }());
+        if (outputflag) {
+          while (i <= f) { // 検索語句に引っかかっているツイートを出力
+            $("#output").html($("#output").html() + data[i] + '<br>');
+            i++;
+          }
+          $("#output").html($("#output").html() + '<br>');
+          count++;
+        } else i++;
+      }
+      return count;
+    }
+  </script>
+</body>
+
+</html>
