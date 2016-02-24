@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
 <body>
   <form name="form1" id="id_form1" action="">
-    <input name="textBox1" id="id_textBox1" type="text" value="マステ" />
-  </form>
-  <hr/>
-  <form name="form2" id="id_form2" action="">
-    <input name="textBox2" id="id_textBox2" type="text" value="" />
-    <input type="button" id="id_button2" value="抽出" />
+    <input name="textBox1" id="id_textBox1" type="text" value="" /> 検索語句<br/>
+    <input name="textBox2" id="id_textBox2" type="text" value="" /> ファイル<br/>
+    <input type="button" id="id_button2" value="検索" />
   </form>
   <p id="count"></p>
   <hr/>
@@ -26,18 +24,21 @@
       var source;
       var len;
       var count;
+
       function read(file) {
-        count=0;
+        count = 0;
         $.ajax({
           url: file,
           success: function(data) {
             var data_array = data.split(/\r\n|\r|\n/); // 改行コードで分割
             var keyword = $("#id_textBox1").val();
             len = data_array.length;
+            /*
             for (var i = 0; i < len; i++) {
               i = i + extract(data_array, i, len, keyword) - 1;
-            }
-            $("#count").html(count + '件の抽出');
+            }*/
+            count=extract(data_array,len,keyword);
+            $("#count").html(count + '件ヒット');
             $("#output").highlight(keyword);
             source = data_array;
           }
@@ -54,33 +55,40 @@
           return false;
         }
       })
-      $("#id_form2").keypress(function(e) {
-        if (e.which === 13) {
-          return false;
-        }
-      })
+      //$("#id_form2").keypress(function(e) {
+        //if (e.which === 13) {
+          //return false;
+        //}
+      //})
     });
-    function extract(data, j, end, key) {
+
+    function extract(data, len, key) {
       var str = [];
-      var i = 1;
-      var flag1 = 0;
-      var len;
-      str[0] = data[j];
-      if (data[j].indexOf(key) != -1) flag1 = 1;
-      for (i = 1; i + j < end && data[i + j].charAt(0) != '['; i++) {
-        str[i] = data[i + j];
-        if (data[i + j].indexOf(key) != -1) flag1 = 1;
-      }
-      len = str.length;
-      if (flag1 == 1) {
-        console.log(count);
-        for (i = 0; i < len; i++) {
-          $("#output").html($("#output").html() + str[i] + '<br>');
+      var i = 0;
+      var flag = 0;
+      var count = 0;
+
+      while (i < len) {
+        var f = (function(j) { // 次のツイートの行数抽出
+          for (var i = 0; i + j < len && data[i + j].charAt(0) != '['; i++);
+          return i + j -1;
+        }(i + 1));
+
+        for (var s = i; s <= f; s++) {
+          if (data[s].indexOf(key) != -1) flag = 1;
         }
-        $("#output").html($("#output").html() + '<br>');
+        if (flag) {
+          while (i <= f) {
+            $("#output").html($("#output").html() + data[i] + '<br>');
+            i++;
+          }
+          $("#output").html($("#output").html() + '<br>');
+          flag=0;count++;
+        } else i++;
       }
-      return len;
+      return count;
     }
   </script>
 </body>
+
 </html>
